@@ -38,7 +38,7 @@ def comparable_sales(target: Property, sales: list[Sale], valuation_date: date, 
         adjusted = sale.price * (current_index / sale_index if current_index and sale_index else 1.0)
         recency = max(0.05, 1 - age / max_age_days)
         dist_weight = max(0.05, 1 - d / radius_m)
-        result.append(ComparableUsed(sale_id=sale.sale_id, sale_date=sale.sale_date, distance_m=round(d, 2), similarity=round(sim, 4), recency_weight=round(recency*dist_weight, 4), adjusted_price=round(adjusted, 2), adjusted_price_per_sqm=round(adjusted/sale.area_sqm, 2)))
+        result.append(ComparableUsed(sale_id=sale.sale_id, sale_date=sale.sale_date, distance_m=round(d, 2), similarity=round(sim, 4), recency_weight=round(recency*dist_weight, 4), adjusted_price=round(adjusted, 2), adjusted_price_per_sqm=round(adjusted/sale.area_sqm, 2), latitude=sale.latitude, longitude=sale.longitude))
     return sorted(result, key=lambda c: c.similarity*c.recency_weight, reverse=True)
 
 def value_property(target: Property, sales: list[Sale], valuation_date: date, indices: list[MarketIndex], *, min_comparables=3, data_version="demo-1", model_version="comparable-v1") -> ValuationResponse:

@@ -38,6 +38,8 @@ class ComparableUsed(BaseModel):
     recency_weight: float
     adjusted_price: float
     adjusted_price_per_sqm: float
+    latitude: float
+    longitude: float
 
 class ValuationResponse(BaseModel):
     status: Literal["ok", "insufficient evidence"]
