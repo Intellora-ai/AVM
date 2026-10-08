@@ -1,7 +1,9 @@
 # Question → delete → simplify
 
 This audit supersedes earlier descriptions of automatic imagery/outline calls and
-Google photorealistic 3D support. Those behaviors were removed during simplification.
+Google photorealistic 3D support. Automatic calls remain removed. At the user’s
+subsequent explicit request, Cesium/3D visual review was restored as an optional
+on-demand viewer; it is not a valuation input.
 
 | Requirement / origin | Why it exists and what removal changes | Decision / proof needed |
 |---|---|---|
@@ -10,7 +12,7 @@ Google photorealistic 3D support. Those behaviors were removed during simplifica
 | Evidence, date, currency, measurement type — correctness | Numbers without these can compare different things | Keep; retain source receipts and checks |
 | Sales comparison — customer / appraisal method | Establishes market price from substitutes | Keep; judge by held-out actual sales |
 | Multiple model implementations — engineering choice | Useful only if accuracy warrants complexity | Existing measured baseline/challenger remain; no new model unless it beats validation |
-| 3D rendering/Cesium — customer feature request | Shows context, not measured market value; no demonstrated accuracy gain | Delete viewer, loader and enable flag; add back only with a validated user benefit |
+| 3D rendering/Cesium — customer feature request | Shows context, not measured market value; no demonstrated accuracy gain | Restored on demand after the customer confirmed visual review is the benefit; no claim that it improves valuation accuracy |
 | Street imagery — customer feature request | Can help visual review but is not necessary for every valuation | Optional explicit action; keep satellite link fallback |
 | Every-address footprint query — implementation choice | Added latency/network calls even when size is already known | Delete automatic lookup; request only when measurement is needed |
 | Two discovery calls — implementation accident | Main panel and intelligence both called discovery | Delete standalone client discovery; share intelligence location evidence |

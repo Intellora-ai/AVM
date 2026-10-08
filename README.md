@@ -74,8 +74,9 @@ This is a buyer research tool. Private residential Singapore property, exact apa
 # On-demand worldwide discovery
 
 The latest [requirements audit and deletions](docs/REQUIREMENTS_AUDIT.md) removes
-3D rendering, duplicate initial valuations/discovery calls, automatic footprint
-requests and startup presentation panels. Optional tools run when requested.
+duplicate initial valuations/discovery calls, automatic footprint
+requests and startup presentation panels. Optional tools run when requested. Cesium/Google 3D visual review is restored,
+with browser-key configuration and explicit `GOOGLE_3D_TILES_ENABLED=true`.
 
 Automatic Brave web-search and optional Google 360° Street View
 integration are now available behind API-key configuration. Explicit OSM building

@@ -7,7 +7,7 @@ def test_missing_keys_fallback_no_invented_search(monkeypatch):
     for name in ('BRAVE_SEARCH_API_KEY','GOOGLE_MAPS_API_KEY','GOOGLE_MAPS_SERVER_KEY','GOOGLE_MAPS_BROWSER_KEY'):monkeypatch.delenv(name,raising=False)
     assert search_address('10 Example Street')['results']==[]
     value=imagery(1,2)
-    assert value['street_view']=='not configured' and 'three_d_enabled' not in value
+    assert value['street_view']=='not configured' and not value['three_d_enabled']
     assert 'OpenStreetMap' in value['fallbacks']
 
 def test_brave_queries_rank_deduplicate_and_cache(monkeypatch):
@@ -30,12 +30,13 @@ def test_brave_queries_rank_deduplicate_and_cache(monkeypatch):
 def test_street_view_metadata_hides_server_key(monkeypatch):
     monkeypatch.setenv('GOOGLE_MAPS_SERVER_KEY','private-server-key')
     monkeypatch.setenv('GOOGLE_MAPS_BROWSER_KEY','public-restricted-key')
+    monkeypatch.setenv('GOOGLE_3D_TILES_ENABLED','true')
     class Response:
         def raise_for_status(self):pass
         def json(self):return {'status':'OK','pano_id':'abc','date':'2025-01'}
     monkeypatch.setattr('app.integrations.httpx.get',lambda *a,**k:Response())
     result=imagery(1,2)
-    assert result['street_view']=='available' and 'three_d_enabled' not in result
+    assert result['street_view']=='available' and result['three_d_enabled']
     assert 'private-server-key' not in str(result)
     assert TestClient(app).get('/imagery?latitude=91&longitude=0').status_code==422
 

@@ -42,7 +42,7 @@ def search_address(address,neighbourhood=''):
 def imagery(latitude,longitude):
     server_key=os.environ.get('GOOGLE_MAPS_SERVER_KEY') or os.environ.get('GOOGLE_MAPS_API_KEY')
     browser_key=os.environ.get('GOOGLE_MAPS_BROWSER_KEY')
-    result={'street_view':'not configured','browser_key':browser_key,'fallbacks':['satellite viewer','OpenStreetMap','imported building footprints']}
+    result={'street_view':'not configured','browser_key':browser_key,'three_d_enabled':bool(browser_key and os.environ.get('GOOGLE_3D_TILES_ENABLED')=='true'),'fallbacks':['satellite viewer','OpenStreetMap','imported building footprints']}
     if server_key:
         try:
             response=httpx.get('https://maps.googleapis.com/maps/api/streetview/metadata',params={'location':f'{latitude},{longitude}','radius':50,'key':server_key},timeout=10)

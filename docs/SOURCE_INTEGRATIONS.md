@@ -16,11 +16,14 @@ the public browser key to your website and required APIs. Enable the Street View
 Static and Maps Embed APIs as appropriate to the two calls. Billing/quotas and
 provider terms apply; free source data is not a guarantee of free API usage.
 
-Photorealistic 3D/Cesium and its enable flag were deleted in the requirements
-audit because no valuation-accuracy benefit was demonstrated. Street View and
-satellite reference remain optional explicit actions. Missing keys leave OSM and
-outline tools usable. Google embed errors inside a cross-origin iframe cannot be
-reliably detected by the parent app.
+CesiumJS 1.134.1 / Google Photorealistic 3D Tiles are restored for optional visual
+review. Configure the restricted browser key, enable Google Map Tiles API and set
+`GOOGLE_3D_TILES_ENABLED=true`. The viewer loads only after opening imagery and
+pressing the 3D button. No Cesium ion token is required. Google/Cesium attribution
+remains visible. A loading error falls back to satellite reference. No coverage or
+valuation accuracy is guaranteed by enabling the viewer. Street/satellite imagery
+and measurement tools remain usable independently. Authenticated live rendering
+has not been verified because Google API keys are absent here.
 
 Set variables in the environment before launching; `.env.example` lists names.
 Alternatively copy that template to the ignored `.env` file and fill values locally;
