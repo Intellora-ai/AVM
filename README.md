@@ -73,6 +73,13 @@ HDB sales/buildings: data.gov.sg and original Singapore government data terms. C
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
 # On-demand worldwide discovery
 
+After selecting an address, use **Measure plot or building outline**. Draw the
+boundary on the map or import one Polygon GeoJSON outline, then finish to obtain
+WGS84 area in m²/ft², perimeter and a saved coordinate receipt. Google satellite
+view is available through an external location link. Measurements remain unverified
+until boundary provenance is established and never automatically become floor area.
+See [measurement, source and appraisal research](docs/PROPERTY_MEASUREMENT_RESEARCH.md).
+
 The primary journey is now **enter address → resolve/select property → valuation**.
 The app does not preload or draw a worldwide property-dot layer. Supported address
 suggestions are fetched in batches of at most 20; ambiguous block/type matches

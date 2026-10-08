@@ -5,3 +5,4 @@ pytest==8.3.4
 psycopg[binary]==3.3.6
 httpx==0.28.1
 scikit-learn==1.8.0
+geographiclib==2.1

@@ -4,6 +4,7 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
 import EvidencePanel from './EvidencePanel';
+import GeometryPanel from './GeometryPanel';
 const money=n=>n==null?'Unavailable':new Intl.NumberFormat('en-SG',{style:'currency',currency:'SGD',maximumFractionDigits:0}).format(n);
 async function api(path,options){const r=await fetch(path,options);if(!r.ok)throw Error((await r.json()).detail||'Request failed');return r.json();}
 function Timeline({result}){
@@ -34,7 +35,7 @@ function App(){
     const m=new maplibregl.Map({container:container.current,center:[10,20],zoom:1.5,style:{version:8,sources:{world:{type:'geojson',data:'/world.geojson'},osm:{type:'raster',tiles:[import.meta.env.VITE_TILE_URL||window.location.origin+'/basemap/world/{z}/{x}/{y}.png'],tileSize:256,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Natural Earth'},onemap:{type:'raster',tiles:[window.location.origin+'/basemap/sg/{z}/{x}/{y}.png'],tileSize:256,bounds:[103.59,1.13,104.12,1.48],minzoom:9,maxzoom:18,attribution:'© <a href="https://www.onemap.gov.sg/">Singapore Land Authority OneMap</a>'}},layers:[{id:'ocean',type:'background',paint:{'background-color':'#dcebf0'}},{id:'countries',type:'fill',source:'world',paint:{'fill-color':'#eef1e8'}},{id:'borders',type:'line',source:'world',paint:{'line-color':'#adc0bd','line-width':1}},{id:'basemap',type:'raster',source:'osm'},{id:'official-sg',type:'raster',source:'onemap'}]}});
     map.current=m;m.addControl(new maplibregl.NavigationControl());m.addControl(new maplibregl.FullscreenControl());
     m.on('error',()=>setMapError('Some street tiles could not load. Try again shortly; Singapore also uses the official OneMap basemap.'));
-    m.on('click',e=>{setSelected(null);setLocation({name:'Selected map location',lat:e.lngLat.lat,lon:e.lngLat.lng});setResult(null)});
+    m.on('click',e=>{if(m.__measuring)return;setSelected(null);setLocation({name:'Selected map location',lat:e.lngLat.lat,lon:e.lngLat.lng});setResult(null)});
     return()=>m.remove();
   },[]);
   useEffect(()=>{
@@ -81,6 +82,7 @@ function App(){
       </>}
     </>}{!selected&&error&&<p role="alert">{error}</p>}
     {(location||selected)&&<p><a target="_blank" rel="noreferrer" href={'https://www.mapillary.com/app/?lat='+(location?location.lat:selected.latitude)+'&lng='+(location?location.lon:selected.longitude)+'&z=17'}>Check available street imagery on Mapillary ↗</a><br/><small>External imagery; coverage varies. Tilted map is not a 3D building model.</small></p>}
+    {(location||selected)&&<GeometryPanel map={map.current} latitude={location?location.lat:selected.latitude} longitude={location?location.lon:selected.longitude}/>}
     {(location||selected)&&<EvidencePanel latitude={location?location.lat:selected.latitude} longitude={location?location.lon:selected.longitude} address={location?location.name:selected.address} propertyId={selected?.property_id} currency={selected?.currency||'USD'}/>}
     </aside>
   </main></>;

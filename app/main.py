@@ -11,11 +11,26 @@ from .valuation import value_property
 from .evidence import EvidenceDiscovery
 from pydantic import BaseModel, Field
 from .intelligence import Intelligence, IntelligenceRequest
+from .geometry import MeasurementRequest, measure
 
 repository=Repository()
 discovery=EvidenceDiscovery(repository)
 intelligence=Intelligence(discovery, ROOT)
 app=FastAPI(title='AVM · residential evidence')
+@app.post('/measurements')
+def measurement(request:MeasurementRequest):
+    try:result=measure(request)
+    except ValueError as exc:raise HTTPException(422,str(exc))
+    path=ROOT/'data/measurements';path.mkdir(exist_ok=True)
+    (path/(result['measurement_id']+'.json')).write_text(json.dumps(result))
+    return result
+
+@app.get('/measurements/{key}')
+def measurement_receipt(key:str):
+    if not re.fullmatch('[a-f0-9]{64}',key):raise HTTPException(404)
+    path=ROOT/'data/measurements'/(key+'.json')
+    if not path.exists():raise HTTPException(404)
+    return json.loads(path.read_text())
 class EvidenceRequest(BaseModel):
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
