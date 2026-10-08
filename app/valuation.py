@@ -1,57 +1,69 @@
-"""Pure comparable-sales model. Database and HTTP layers deliberately do not leak in here."""
-from datetime import date
-from math import asin, cos, radians, sin, sqrt
+"""Replaceable comparable model with strictly earlier-sales calibration."""
+from datetime import date, timedelta
+from math import asin, cos, radians, sin, sqrt, log, exp, ceil
 from statistics import median
-from .models import MarketIndex, Property, Sale, ComparableUsed, ValuationResponse, ForecastScenario
+from .models import Property, Sale, ComparableUsed, ValuationResponse, ForecastScenario
 
-EARTH_M = 6_371_000
+MODEL_VERSION='comparables-2.0'
+def distance_m(a,b,c,d):
+    h=sin(radians(c-a)/2)**2+cos(radians(a))*cos(radians(c))*sin(radians(d-b)/2)**2
+    return 12742000*asin(sqrt(min(1,h)))
 
-def distance_m(a_lat: float, a_lon: float, b_lat: float, b_lon: float) -> float:
-    dlat, dlon = radians(b_lat-a_lat), radians(b_lon-a_lon)
-    h = sin(dlat/2)**2 + cos(radians(a_lat))*cos(radians(b_lat))*sin(dlon/2)**2
-    return 2 * EARTH_M * asin(sqrt(h))
+def annual_trend(sales,on):
+    older=[s.price/s.area_sqm for s in sales if 365 <= (on-s.sale_date).days < 730]
+    recent=[s.price/s.area_sqm for s in sales if 0 < (on-s.sale_date).days < 365]
+    if min(len(older),len(recent)) < 10: return None
+    return max(-.2,min(.2,log(median(recent)/median(older))))
 
-def index_value(indices: list[MarketIndex], on: date) -> float | None:
-    prior = [x for x in indices if x.index_date <= on]
-    return max(prior, key=lambda x: x.index_date).value if prior else None
+def comparable_sales(target,sales,on,candidates=None):
+    trend=annual_trend([s for s in sales if s.property_id!=target.property_id],on)
+    if target.area_sqm is None or trend is None: return []
+    ranked=[]
+    for s in sales if candidates is None else candidates:
+        age=(on-s.sale_date).days
+        distance=distance_m(target.latitude,target.longitude,s.latitude,s.longitude)
+        ratio=min(target.area_sqm,s.area_sqm)/max(target.area_sqm,s.area_sqm)
+        if s.property_id==target.property_id or not 0<age<=730 or distance>2000 or ratio<.75 or s.property_type!=target.property_type: continue
+        adjusted=s.price*exp(trend*age/365.25)
+        c=ComparableUsed(sale_id=s.sale_id,property_id=s.property_id,sale_date=s.sale_date,distance_m=round(distance,1),similarity=ratio,recency_weight=exp(-age/365)/(1+distance/500),adjusted_price=round(adjusted,2),adjusted_price_per_sqm=adjusted/s.area_sqm,latitude=s.latitude,longitude=s.longitude,original_price=s.price,area_sqm=s.area_sqm,source=s.source,source_reference=s.source_reference)
+        ranked.append(c)
+    return sorted(ranked,key=lambda c:c.similarity*c.recency_weight,reverse=True)[:12]
 
-def similarity(target: Property, sale: Sale) -> float:
-    score = 1.0 if target.property_type == sale.property_type else 0.15
-    area_ratio = min(target.area_sqm, sale.area_sqm) / max(target.area_sqm, sale.area_sqm)
-    score *= 0.5 + 0.5 * area_ratio
-    if target.bedrooms is not None and sale.bedrooms is not None:
-        score *= 1.0 if target.bedrooms == sale.bedrooms else 0.65
-    return score
+def point_estimate(target,sales,on,candidates=None):
+    comps=comparable_sales(target,sales,on,candidates)
+    if len(comps)<5 or len({c.property_id for c in comps})<3: return None,comps
+    weights=[c.similarity*c.recency_weight for c in comps]
+    return target.area_sqm*sum(c.adjusted_price_per_sqm*w for c,w in zip(comps,weights))/sum(weights),comps
 
-def comparable_sales(target: Property, sales: list[Sale], valuation_date: date, indices: list[MarketIndex], *, radius_m=5000, max_age_days=1095) -> list[ComparableUsed]:
-    current_index = index_value(indices, valuation_date)
-    result = []
-    for sale in sales:
-        age = (valuation_date - sale.sale_date).days
-        d = distance_m(target.latitude, target.longitude, sale.latitude, sale.longitude)
-        if sale.property_id == target.property_id or age < 0 or age > max_age_days or d > radius_m:
-            continue
-        sim = similarity(target, sale)
-        if sim < 0.35:
-            continue
-        sale_index = index_value(indices, sale.sale_date)
-        adjusted = sale.price * (current_index / sale_index if current_index and sale_index else 1.0)
-        recency = max(0.05, 1 - age / max_age_days)
-        dist_weight = max(0.05, 1 - d / radius_m)
-        result.append(ComparableUsed(sale_id=sale.sale_id, sale_date=sale.sale_date, distance_m=round(d, 2), similarity=round(sim, 4), recency_weight=round(recency*dist_weight, 4), adjusted_price=round(adjusted, 2), adjusted_price_per_sqm=round(adjusted/sale.area_sqm, 2), latitude=sale.latitude, longitude=sale.longitude))
-    return sorted(result, key=lambda c: c.similarity*c.recency_weight, reverse=True)
+def backtest(sales,on):
+    errors=[]
+    candidates=sorted([s for s in sales if on-timedelta(days=730)<=s.sale_date<on],key=lambda s:(s.sale_date,s.sale_id))[-80:]
+    for s in candidates:
+        p=Property(property_id=s.property_id,latitude=s.latitude,longitude=s.longitude,area_sqm=s.area_sqm,property_type=s.property_type)
+        predicted,_=point_estimate(p,sales,s.sale_date)
+        if predicted: errors.append(abs(log(s.price/predicted)))
+    return errors
 
-def value_property(target: Property, sales: list[Sale], valuation_date: date, indices: list[MarketIndex], *, min_comparables=3, data_version="demo-1", model_version="comparable-v1") -> ValuationResponse:
-    comps = comparable_sales(target, sales, valuation_date, indices)
-    if len(comps) < min_comparables:
-        return ValuationResponse(status="insufficient evidence", confidence=0, comparable_sales_used=comps, valuation_date=valuation_date, data_version=data_version, model_version=model_version, reason=f"Only {len(comps)} suitable comparables; need at least {min_comparables}.", sources=["demo registry", "demo market index"])
-    weights = [max(0.0001, c.similarity*c.recency_weight) for c in comps]
-    ppsm = sum(c.adjusted_price_per_sqm*w for c,w in zip(comps,weights)) / sum(weights)
-    estimate = ppsm * target.area_sqm
-    errors = [abs(c.adjusted_price_per_sqm - ppsm) / ppsm for c in comps]
-    spread = max(0.05, min(0.35, median(errors) * 1.96))
-    quality = min(1.0, sum(weights)/len(weights))
-    confidence = round(max(0.0, min(0.99, quality * (1 - min(0.8, spread)))), 3)
-    low, high = estimate*(1-spread), estimate*(1+spread)
-    forecasts = [ForecastScenario(months=m, lower=round(low*(1+0.003*m),2), central=round(estimate*(1+0.005*m),2), upper=round(high*(1+0.007*m),2)) for m in (12,24,36)]
-    return ValuationResponse(status="ok", estimated_value=round(estimate,2), lower_bound=round(low,2), upper_bound=round(high,2), confidence=confidence, comparable_sales_used=comps, valuation_date=valuation_date, data_version=data_version, model_version=model_version, forecasts=forecasts, sources=["demo registry", "demo market index"])
+def value_property(target,sales,on,indices=None,*,data_version='unknown',data_date=None,**kwargs):
+    estimate,comps=point_estimate(target,sales,on,kwargs.get('candidates'))
+    result=ValuationResponse(status='insufficient evidence',confidence=0,comparable_sales_used=comps,valuation_date=on,data_version=data_version,model_version=MODEL_VERSION,property=target,data_date=data_date,demo=False,sources=sorted({s.source for s in sales}),reason='Insufficient market evidence to produce a reliable valuation.')
+    if data_date and (on-data_date).days>180:
+        result.reason='Insufficient current evidence: transaction snapshot is more than 180 days old.'
+        return result
+    if estimate is None: return result
+    errors=backtest(sales,on)
+    if len(errors)<20:
+        result.reason='Insufficient historical predictions to calibrate a valuation range.'
+        return result
+    q=sorted(errors)[min(len(errors)-1,ceil((len(errors)+1)*.9)-1)]
+    result.status='ok';result.reason=None
+    result.estimated_value=round(estimate)
+    result.lower_bound=round(estimate*exp(-q));result.upper_bound=round(estimate*exp(q))
+    result.calibration_count=len(errors)
+    result.confidence=round(max(0,min(.85,1-exp(q)+1)),2)
+    result.confidence_label='moderate' if q<.2 else 'low'
+    result.interval_method='90% absolute log-error quantile from earlier rolling historical predictions; coverage not guaranteed.'
+    trend=annual_trend([s for s in sales if s.property_id!=target.property_id],on)
+    result.forecast_method=f'Historical local median price/m² trend ({100*(exp(trend)-1):.1f}% annual), compounded; widening residual scenarios. Mix changes may bias trend.'
+    result.forecasts=[ForecastScenario(months=m,lower=round(estimate*exp(trend*m/12-q*sqrt(1+m/12))),central=round(estimate*exp(trend*m/12)),upper=round(estimate*exp(trend*m/12+q*sqrt(1+m/12)))) for m in (12,24,36)]
+    return result
