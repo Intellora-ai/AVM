@@ -16,26 +16,23 @@ the public browser key to your website and required APIs. Enable the Street View
 Static and Maps Embed APIs as appropriate to the two calls. Billing/quotas and
 provider terms apply; free source data is not a guarantee of free API usage.
 
-Setting `GOOGLE_3D_TILES_ENABLED=true` explicitly enables the 3D button. It uses
-CesiumJS 1.134.1 and Google Photorealistic 3D Tiles with the browser key; enable
-Google Map Tiles API. No Cesium ion token is required. Google/Cesium attribution
-is left visible. 3D is loaded on button press, not for every valuation. Failed 3D
-loading switches to satellite embed; absent keys leave OSM and outline tools usable.
-Street View metadata errors/no coverage are shown. A Google satellite viewer link
-is available even without API integration. Google embed permission errors within
-the cross-origin iframe cannot be reliably detected by the parent app.
+Photorealistic 3D/Cesium and its enable flag were deleted in the requirements
+audit because no valuation-accuracy benefit was demonstrated. Street View and
+satellite reference remain optional explicit actions. Missing keys leave OSM and
+outline tools usable. Google embed errors inside a cross-origin iframe cannot be
+reliably detected by the parent app.
 
 Set variables in the environment before launching; `.env.example` lists names.
 Alternatively copy that template to the ignored `.env` file and fill values locally;
 `start.command` loads it through Uvicorn's dotenv support. Docker Compose also
 passes these optional settings through to the web service. Do not commit keys.
 Neither provider credential was present
-during development, so authenticated live search, Google coverage and 3D rendering
+during development, so authenticated live search, Google coverage
 remain unverified. Their integration logic is tested with controlled API responses.
 
 ## Free outline lookup and measurement
 
-Address selection requests OSM building ways within 125 m via Overpass. Up to 100
+Explicit outline lookup requests OSM building ways within 125 m via Overpass. Up to 100
 simple closed outlines are normalized, measured with WGS84 and cached for a day.
 The panel offers up to five outline choices; users confirm the appropriate building.
 It does not silently treat the nearest building as a legal plot or a particular unit.

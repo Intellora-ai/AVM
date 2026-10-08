@@ -1,6 +1,6 @@
 import React, {useEffect,useState} from 'react';
 
-export default function EvidencePanel({latitude,longitude,address,propertyId,currency='USD'}) {
+export default function EvidencePanel({latitude,longitude,address,propertyId,currency='USD',onLocationEvidence}) {
   const [urls,setUrls]=useState(''),[area,setArea]=useState(''),[unit,setUnit]=useState(currency),[yieldRate,setYieldRate]=useState('');
   const [result,setResult]=useState(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
   const [propertyType,setPropertyType]=useState('residential');
@@ -9,10 +9,10 @@ export default function EvidencePanel({latitude,longitude,address,propertyId,cur
     try {
       const response=await fetch('/intelligence',{method:'POST',signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({latitude,longitude,address:address||'',property_id:propertyId||null,property_type:initial?'residential':propertyType,currency:initial?currency:unit,area_sqm:initial?null:area?Number(area):null,annual_gross_yield:initial?null:yieldRate?Number(yieldRate)/100:null,source_urls:initial?[]:urls.split(/\n/).map(u=>u.trim()).filter(Boolean)})});
       const body=await response.json();if(!response.ok)throw Error(typeof body.detail==='string'?body.detail:'Check the supplied inputs and URLs.');
-      if(!signal?.aborted)setResult(body);
+      if(!signal?.aborted){setResult(body);onLocationEvidence?.(body.location_evidence)}
     }catch(e){if(e.name!=='AbortError')setError(e.message)}finally{if(!signal?.aborted)setBusy(false)}
   }
-  useEffect(()=>{const controller=new AbortController();setResult(null);setUrls('');setArea('');setYieldRate('');setUnit(currency);run(controller.signal,true);return()=>controller.abort()},[latitude,longitude,propertyId,currency]);
+  useEffect(()=>{const controller=new AbortController();setResult(null);setUrls('');setArea('');setYieldRate('');setUnit(currency);setBusy(false);if(!propertyId)run(controller.signal,true);return()=>controller.abort()},[latitude,longitude,propertyId,currency]);
   const format=n=>n==null?'Unavailable':new Intl.NumberFormat('en',{style:'currency',currency:result?.property.currency||unit,maximumFractionDigits:0}).format(n);
   return <section><h2>On-demand property intelligence</h2><p>Fetch published source evidence for this location. Sale transactions, asking prices and rents remain separate.</p>
     <label>Public listing/source URLs (one per line, maximum 8)<textarea aria-label="Source URLs" rows="3" value={urls} onChange={e=>setUrls(e.target.value)} placeholder="https://…" style={{width:'100%'}}/></label>

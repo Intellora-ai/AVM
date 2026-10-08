@@ -73,8 +73,12 @@ HDB sales/buildings: data.gov.sg and original Singapore government data terms. C
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
 # On-demand worldwide discovery
 
-Automatic Brave web-search and optional Google 360° Street View/Photorealistic 3D
-Tiles integrations are now available behind API-key configuration. OSM building
+The latest [requirements audit and deletions](docs/REQUIREMENTS_AUDIT.md) removes
+3D rendering, duplicate initial valuations/discovery calls, automatic footprint
+requests and startup presentation panels. Optional tools run when requested.
+
+Automatic Brave web-search and optional Google 360° Street View
+integration are now available behind API-key configuration. Explicit OSM building
 footprint lookup requests only a 125 m area around the selected address; source
 failures leave drawing/import available. No parcel is invented from a building
 outline. See [configuration, tested behavior and exclusions](docs/SOURCE_INTEGRATIONS.md).
