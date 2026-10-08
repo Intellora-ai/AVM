@@ -73,6 +73,13 @@ HDB sales/buildings: data.gov.sg and original Singapore government data terms. C
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
 # On-demand worldwide discovery
 
+With `GOOGLE_MAPS_BROWSER_KEY` configured, the main page now uses Google Maps
+and Google's address/business search directly. Enable Maps JavaScript, Places
+(New) and Geocoding APIs. Without that configuration the open map starts.
+See [Google-native search and drawing](docs/GOOGLE_MAP_SEARCH.md).
+Valuation floor-area inputs now accept m² or ft², preserve original units and
+show estimated unit prices. See [conversion and area-type rules](docs/AREA_INPUTS.md).
+
 The latest [requirements audit and deletions](docs/REQUIREMENTS_AUDIT.md) removes
 duplicate initial valuations/discovery calls, automatic footprint
 requests and startup presentation panels. Optional tools run when requested. Cesium/Google 3D visual review is restored,

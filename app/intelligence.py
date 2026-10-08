@@ -15,7 +15,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin, urlsplit, urlunsplit
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from .models import normalize_floor_area
 
 VERSION = 'web-evidence-2'
 RELIABILITY = {'registered_transaction': .95, 'closed_sale': .8,
@@ -35,6 +36,7 @@ class IntelligenceRequest(BaseModel):
     address: str = Field(default='', max_length=300)
     property_type: str = Field(default='residential', max_length=80)
     area_sqm: float | None = Field(default=None, gt=0, le=100000)
+    area_sqft: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     bedrooms: int | None = Field(default=None, ge=0, le=100)
     bathrooms: float | None = Field(default=None, ge=0, le=100)
     land_area_sqm: float | None = Field(default=None, gt=0)
@@ -44,6 +46,10 @@ class IntelligenceRequest(BaseModel):
     source_urls: list[str] = Field(default_factory=list, max_length=8)
     property_id: str | None = Field(default=None, max_length=100)
     annual_gross_yield: float | None = Field(default=None, ge=.005, le=.3)
+    @model_validator(mode='after')
+    def normalize_area(self):
+        self.area_sqm=normalize_floor_area(self.area_sqm,self.area_sqft,100000)
+        return self
 
 class StructuredData(HTMLParser):
     def __init__(self):

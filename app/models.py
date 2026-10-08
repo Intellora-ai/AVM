@@ -1,6 +1,16 @@
 from datetime import date
 from typing import Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+SQFT_TO_SQM = 0.09290304
+
+def normalize_floor_area(sqm, sqft, maximum):
+    if sqm is not None and sqft is not None:
+        raise ValueError('Supply floor area in either m² or ft², not both')
+    converted=round(sqft*SQFT_TO_SQM,8) if sqft is not None else sqm
+    if converted is not None and converted>maximum:
+        raise ValueError(f'Floor area must not exceed {maximum} m²')
+    return converted
 
 class Property(BaseModel):
     property_id: str
@@ -46,8 +56,13 @@ class ValuationRequest(BaseModel):
     property_id: str
     valuation_date: date
     area_sqm: float | None = Field(default=None, gt=0, le=2000)
+    area_sqft: float | None = Field(default=None, gt=0, allow_inf_nan=False)
     storey_range: str | None = Field(default=None, pattern=r"^[0-9]{2} TO [0-9]{2}$")
     flat_model: str | None = Field(default=None, max_length=80)
+    @model_validator(mode='after')
+    def normalize_area(self):
+        self.area_sqm=normalize_floor_area(self.area_sqm,self.area_sqft,2000)
+        return self
 
 class ComparableUsed(BaseModel):
     sale_id: str
@@ -101,3 +116,6 @@ class ValuationResponse(BaseModel):
     valuation_method: str = "comparable sales"
     input_assumptions: list[str] = []
     model_training_data_version: str | None = None
+    area_input: dict | None = None
+    price_per_sqm: float | None = None
+    price_per_sqft: float | None = None

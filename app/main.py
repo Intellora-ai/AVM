@@ -19,6 +19,10 @@ repository=Repository()
 discovery=EvidenceDiscovery(repository)
 intelligence=Intelligence(discovery, ROOT)
 app=FastAPI(title='AVM · residential evidence')
+@app.get('/map-config')
+def map_configuration():
+    import os
+    return {'google_browser_key':os.environ.get('GOOGLE_MAPS_BROWSER_KEY') or None}
 @app.get('/web-search')
 def web_search(address:str=Query(min_length=3,max_length=300),neighbourhood:str=Query(default='',max_length=100)):
     return search_address(address,neighbourhood)
@@ -193,9 +197,13 @@ def valuation(request:ValuationRequest):
     result=value_property(target,market_sales,request.valuation_date,candidates=[s for s in nearby+archival if s.property_type==target.property_type],data_version=repository.version,data_date=date.fromisoformat(repository.snapshot['data_date']))
     result.historical_transactions=history
     result.input_assumptions=['Representative block/type area from strictly earlier records.' if request.area_sqm is None else 'Area supplied by user.','Historical estimates are reconstructed from this snapshot, not proof of what was known on that date.']
+    result.area_input={'kind':'floor area','value':request.area_sqft if request.area_sqft is not None else request.area_sqm,'unit':'ft²' if request.area_sqft is not None else 'm²','normalized_sqm':target.area_sqm,'basis':'user supplied' if request.area_sqm is not None else 'representative area from earlier block/type sales','verified':False}
     result.model_training_data_version=repository.snapshot['data_version']
     from .ml import apply_challenger
     result=apply_challenger(result,request,history)
+    if result.estimated_value is not None and target.area_sqm:
+        result.price_per_sqm=round(result.estimated_value/target.area_sqm,2)
+        result.price_per_sqft=round(result.estimated_value/target.area_sqm*0.09290304,2)
     return repository.save(result)
 @app.get('/valuations/{key}')
 def receipt(key:str):
