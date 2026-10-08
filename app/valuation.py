@@ -2,7 +2,7 @@
 from datetime import date
 from math import asin, cos, radians, sin, sqrt
 from statistics import median
-from .models import MarketIndex, Property, Sale, ComparableUsed, ValuationResponse
+from .models import MarketIndex, Property, Sale, ComparableUsed, ValuationResponse, ForecastScenario
 
 EARTH_M = 6_371_000
 
@@ -44,7 +44,7 @@ def comparable_sales(target: Property, sales: list[Sale], valuation_date: date, 
 def value_property(target: Property, sales: list[Sale], valuation_date: date, indices: list[MarketIndex], *, min_comparables=3, data_version="demo-1", model_version="comparable-v1") -> ValuationResponse:
     comps = comparable_sales(target, sales, valuation_date, indices)
     if len(comps) < min_comparables:
-        return ValuationResponse(status="insufficient evidence", confidence=0, comparable_sales_used=comps, valuation_date=valuation_date, data_version=data_version, model_version=model_version, reason=f"Only {len(comps)} suitable comparables; need at least {min_comparables}.")
+        return ValuationResponse(status="insufficient evidence", confidence=0, comparable_sales_used=comps, valuation_date=valuation_date, data_version=data_version, model_version=model_version, reason=f"Only {len(comps)} suitable comparables; need at least {min_comparables}.", sources=["demo registry", "demo market index"])
     weights = [max(0.0001, c.similarity*c.recency_weight) for c in comps]
     ppsm = sum(c.adjusted_price_per_sqm*w for c,w in zip(comps,weights)) / sum(weights)
     estimate = ppsm * target.area_sqm
@@ -52,4 +52,6 @@ def value_property(target: Property, sales: list[Sale], valuation_date: date, in
     spread = max(0.05, min(0.35, median(errors) * 1.96))
     quality = min(1.0, sum(weights)/len(weights))
     confidence = round(max(0.0, min(0.99, quality * (1 - min(0.8, spread)))), 3)
-    return ValuationResponse(status="ok", estimated_value=round(estimate,2), lower_bound=round(estimate*(1-spread),2), upper_bound=round(estimate*(1+spread),2), confidence=confidence, comparable_sales_used=comps, valuation_date=valuation_date, data_version=data_version, model_version=model_version)
+    low, high = estimate*(1-spread), estimate*(1+spread)
+    forecasts = [ForecastScenario(months=m, lower=round(low*(1+0.003*m),2), central=round(estimate*(1+0.005*m),2), upper=round(high*(1+0.007*m),2)) for m in (12,24,36)]
+    return ValuationResponse(status="ok", estimated_value=round(estimate,2), lower_bound=round(low,2), upper_bound=round(high,2), confidence=confidence, comparable_sales_used=comps, valuation_date=valuation_date, data_version=data_version, model_version=model_version, forecasts=forecasts, sources=["demo registry", "demo market index"])

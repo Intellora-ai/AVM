@@ -21,6 +21,7 @@ class Sale(BaseModel):
     longitude: float
     property_type: str
     bedrooms: int | None = Field(default=None, ge=0)
+    source: str = "demo registry"
 
 class MarketIndex(BaseModel):
     index_date: date
@@ -41,6 +42,12 @@ class ComparableUsed(BaseModel):
     latitude: float
     longitude: float
 
+class ForecastScenario(BaseModel):
+    months: int
+    lower: float
+    central: float
+    upper: float
+
 class ValuationResponse(BaseModel):
     status: Literal["ok", "insufficient evidence"]
     estimated_value: float | None = None
@@ -52,3 +59,6 @@ class ValuationResponse(BaseModel):
     data_version: str
     model_version: str
     reason: str | None = None
+    historical_transactions: list[Sale] = []
+    forecasts: list[ForecastScenario] = []
+    sources: list[str] = []

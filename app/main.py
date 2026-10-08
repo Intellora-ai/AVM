@@ -17,4 +17,6 @@ def properties():
 def valuation(request: ValuationRequest):
     target = repository.get_property(request.property_id)
     if not target: raise HTTPException(404, "property not found")
-    return value_property(target, repository.get_sales(request.valuation_date), request.valuation_date, repository.get_indices())
+    result = value_property(target, repository.get_sales(request.valuation_date), request.valuation_date, repository.get_indices())
+    result.historical_transactions = [s for s in repository.get_sales(request.valuation_date) if s.property_id == target.property_id]
+    return result

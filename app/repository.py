@@ -22,3 +22,4 @@ def seed_demo_data():
     repository.indices.extend([MarketIndex(index_date=date(2024, 1, 1), value=100), MarketIndex(index_date=date(2025, 1, 1), value=106), MarketIndex(index_date=date(2026, 1, 1), value=110)])
     for i, (lat, lon, area, price) in enumerate([(51.508, -0.128, 90, 565000), (51.506, -0.126, 95, 590000), (51.509, -0.127, 88, 548000), (51.505, -0.129, 94, 570000), (51.507, -0.125, 91, 555000)], 1):
         repository.sales.append(Sale(sale_id=f"demo-sale-{i}", property_id=f"sold-{i}", sale_date=date(2025, 12, 1)-timedelta(days=i*35), price=price, area_sqm=area, latitude=lat, longitude=lon, property_type="flat", bedrooms=2))
+    repository.sales.append(Sale(sale_id="demo-history-001", property_id="demo-001", sale_date=date(2022, 6, 15), price=470000, area_sqm=92, latitude=51.5074, longitude=-0.1278, property_type="flat", bedrooms=2, source="demo registry"))
