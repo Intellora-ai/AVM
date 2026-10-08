@@ -49,7 +49,7 @@ class EvidenceDiscovery:
             'retrieved_at': datetime.now(timezone.utc).isoformat(), 'cache_hit': False,
             'address': address, 'source_error': source_error, 'matches': matches[:30],
             'status': 'profiles available' if matches else 'insufficient evidence',
-            'reason': 'Choose a nearby block/type profile; exact apartment identity is unavailable.' if matches else 'No usable transaction connector is installed for this location. Insufficient market evidence to produce a reliable valuation.',
+            'reason': 'Choose a nearby block/type profile; exact apartment identity is unavailable.' if matches else 'No matched, validated property valuation is available for this location. The intelligence panel checks available source evidence separately.',
             'sources': ['https://nominatim.openstreetmap.org/'],
             'data_version': self.repository.version, 'discovery_version': 'discovery-1'}
         # Address failure should be retried on the next click instead of cached for a day.

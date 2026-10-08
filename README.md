@@ -73,6 +73,11 @@ HDB sales/buildings: data.gov.sg and original Singapore government data terms. C
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
 # On-demand worldwide discovery
 
+The map panel now also includes **On-demand property intelligence**. It automatically
+queries applicable NYC official sales, accepts public listing URLs, extracts and
+classifies structured evidence, detects duplicates, scores comparability, and saves
+complete evidence receipts. See [implemented behavior and limits](docs/ON_DEMAND_INTELLIGENCE.md).
+
 Click anywhere on the world map or select a worldwide address search result.
 The client calls `POST /evidence/discover` with latitude/longitude. The server
 fetches OpenStreetMap/Nominatim address evidence only on demand, shares a

@@ -21,3 +21,10 @@ SOFTWARE.
 
 Underlying HDB/OneMap data remain subject to their original data terms.
 Coordinates were obtained through the pinned public mirror identified in snapshot.json.
+
+On-demand NYC evidence: New York City Department of Finance Rolling Sales,
+published through NYC Open Data dataset usep-8jbt. Original published rows and
+source references are retained in local evidence receipts. NYC data and third-party
+webpage evidence remain subject to their original source terms; the mirror's MIT
+license above does not license those sources. Webpage copies are local caches,
+not part of the distributed repository.

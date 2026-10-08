@@ -6,3 +6,5 @@ frontend/dist/
 *.pyc
 data/receipts/
 data/evidence-cache/
+data/web-evidence/
+data/intelligence-receipts/

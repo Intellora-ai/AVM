@@ -10,9 +10,11 @@ from .models import ValuationRequest
 from .valuation import value_property
 from .evidence import EvidenceDiscovery
 from pydantic import BaseModel, Field
+from .intelligence import Intelligence, IntelligenceRequest
 
 repository=Repository()
 discovery=EvidenceDiscovery(repository)
+intelligence=Intelligence(discovery, ROOT)
 app=FastAPI(title='AVM · residential evidence')
 class EvidenceRequest(BaseModel):
     latitude: float = Field(ge=-90, le=90)
@@ -21,6 +23,41 @@ class EvidenceRequest(BaseModel):
 @app.post('/evidence/discover')
 def discover_evidence(request: EvidenceRequest):
     return discovery.discover(request.latitude, request.longitude)
+
+@app.post('/intelligence')
+def property_intelligence(request: IntelligenceRequest):
+    if request.property_id and request.property_id not in repository.properties:
+        raise HTTPException(404, 'Property not found')
+    if request.property_id:
+        target=repository.properties[request.property_id]
+        from .valuation import distance_m
+        if distance_m(request.latitude,request.longitude,target.latitude,target.longitude)>100:
+            raise HTTPException(422,'Selected profile does not match this map location')
+        if request.currency != target.currency:
+            raise HTTPException(422,'Currency must match the supported property currency')
+    result=intelligence.run(request)
+    if request.property_id:
+        estimate=valuation(ValuationRequest(property_id=request.property_id,valuation_date=date.today(),area_sqm=request.area_sqm))
+        result['transaction_valuation']=estimate
+        result.update({k:estimate[k] for k in ('status','estimated_value','lower_bound','upper_bound','forecasts')})
+        result['confidence']=estimate['confidence_label']
+        result['confidence_score']=estimate['confidence']
+        result['confidence_reason']='Supported transaction model; web asking/rental indications are shown separately and do not create independent model votes.'
+        result['evidence_scope']=estimate['evidence_scope']
+        # Persist the final response including transaction receipt linkage.
+        import hashlib
+        result.pop('receipt_id',None)
+        key=hashlib.sha256(json.dumps(result,sort_keys=True).encode()).hexdigest()
+        result['receipt_id']=key
+        (ROOT/'data/intelligence-receipts'/(key+'.json')).write_text(json.dumps(result))
+    return result
+
+@app.get('/intelligence/{key}')
+def intelligence_receipt(key:str):
+    if not re.fullmatch('[a-f0-9]{64}',key): raise HTTPException(404)
+    path=ROOT/'data/intelligence-receipts'/(key+'.json')
+    if not path.exists(): raise HTTPException(404)
+    return json.loads(path.read_text())
 @app.get('/health')
 def health(): return {'status':'ok','storage':'postgis' if repository.url else 'snapshot'}
 @app.get('/metadata')
@@ -43,6 +80,20 @@ def basemap(z:int,x:int,y:int):
     if not 9<=z<=18 or not 0<=x<2**z or not 0<=y<2**z:raise HTTPException(404)
     try:return Response(official_tile(z,x,y),media_type='image/png',headers={'Cache-Control':'public, max-age=14400'})
     except Exception:raise HTTPException(502,'Official basemap temporarily unavailable')
+
+@lru_cache(maxsize=1024)
+def osm_tile(z,x,y):
+    response=httpx.get(f'https://tile.openstreetmap.org/{z}/{x}/{y}.png',timeout=15,
+        headers={'User-Agent':'AVM-ResearchPreview/1.0 (https://github.com/Intellora-ai/AVM)'})
+    response.raise_for_status()
+    if not response.headers.get('content-type','').startswith('image/png'):raise ValueError('Unexpected tile format')
+    return response.content
+
+@app.get('/basemap/world/{z}/{x}/{y}.png')
+def world_basemap(z:int,x:int,y:int):
+    if not 0<=z<=19 or not 0<=x<2**z or not 0<=y<2**z:raise HTTPException(404)
+    try:return Response(osm_tile(z,x,y),media_type='image/png',headers={'Cache-Control':'public, max-age=604800'})
+    except Exception:raise HTTPException(502,'OpenStreetMap basemap temporarily unavailable')
 @app.get('/source-records/{sale_id}')
 def source_record(sale_id:str):
     if not re.fullmatch(r'(hdb|d_[a-f0-9]{32})-row-[0-9]+',sale_id):raise HTTPException(404)

@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
+import EvidencePanel from './EvidencePanel';
 const money=n=>n==null?'Unavailable':new Intl.NumberFormat('en-SG',{style:'currency',currency:'SGD',maximumFractionDigits:0}).format(n);
 async function api(path,options){const r=await fetch(path,options);if(!r.ok)throw Error((await r.json()).detail||'Request failed');return r.json();}
 function Timeline({result}){
@@ -28,9 +29,9 @@ function App(){
   const container=useRef(null),map=useRef(null),requestId=useRef(0);
   useEffect(()=>{Promise.all([api('/properties'),api('/metadata'),api('/coverage'),api('/benchmark')]).then(([p,m,c,b])=>{setProperties(p);setMeta(m);setCoverage(c);setBench(b)}).catch(e=>setError(e.message))},[]);
   useEffect(()=>{
-    const m=new maplibregl.Map({container:container.current,center:[10,20],zoom:1.5,style:{version:8,sources:{world:{type:'geojson',data:'/world.geojson'},osm:{type:'raster',tiles:[import.meta.env.VITE_TILE_URL||'https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Natural Earth'},onemap:{type:'raster',tiles:[window.location.origin+'/basemap/sg/{z}/{x}/{y}.png'],tileSize:256,bounds:[103.59,1.13,104.12,1.48],minzoom:9,maxzoom:18,attribution:'© <a href="https://www.onemap.gov.sg/">Singapore Land Authority OneMap</a>'}},layers:[{id:'ocean',type:'background',paint:{'background-color':'#dcebf0'}},{id:'countries',type:'fill',source:'world',paint:{'fill-color':'#eef1e8'}},{id:'borders',type:'line',source:'world',paint:{'line-color':'#adc0bd','line-width':1}},{id:'basemap',type:'raster',source:'osm'},{id:'official-sg',type:'raster',source:'onemap'}]}});
+    const m=new maplibregl.Map({container:container.current,center:[10,20],zoom:1.5,style:{version:8,sources:{world:{type:'geojson',data:'/world.geojson'},osm:{type:'raster',tiles:[import.meta.env.VITE_TILE_URL||window.location.origin+'/basemap/world/{z}/{x}/{y}.png'],tileSize:256,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Natural Earth'},onemap:{type:'raster',tiles:[window.location.origin+'/basemap/sg/{z}/{x}/{y}.png'],tileSize:256,bounds:[103.59,1.13,104.12,1.48],minzoom:9,maxzoom:18,attribution:'© <a href="https://www.onemap.gov.sg/">Singapore Land Authority OneMap</a>'}},layers:[{id:'ocean',type:'background',paint:{'background-color':'#dcebf0'}},{id:'countries',type:'fill',source:'world',paint:{'fill-color':'#eef1e8'}},{id:'borders',type:'line',source:'world',paint:{'line-color':'#adc0bd','line-width':1}},{id:'basemap',type:'raster',source:'osm'},{id:'official-sg',type:'raster',source:'onemap'}]}});
     map.current=m;m.addControl(new maplibregl.NavigationControl());m.addControl(new maplibregl.FullscreenControl());
-    m.on('error',()=>setMapError('Some global street tiles could not load. Singapore uses the official OneMap basemap.'));
+    m.on('error',()=>setMapError('Some street tiles could not load. Try again shortly; Singapore also uses the official OneMap basemap.'));
     m.on('click',e=>{if(m.getLayer('homes')&&m.queryRenderedFeatures(e.point,{layers:['homes']}).length)return;setSelected(null);setLocation({name:'Selected map location',lat:e.lngLat.lat,lon:e.lngLat.lng});setResult(null)});
     return()=>m.remove();
   },[]);
@@ -55,9 +56,10 @@ function App(){
   useEffect(()=>{
     const markers=[];const m=map.current;
     if(selected)markers.push(new maplibregl.Marker({color:'#dc7d20'}).setLngLat([selected.longitude,selected.latitude]).addTo(m));
+    else if(location)markers.push(new maplibregl.Marker({color:'#dc7d20'}).setLngLat([location.lon,location.lat]).addTo(m));
     if(selected)result?.comparable_sales_used.forEach(c=>markers.push(new maplibregl.Marker({color:'#7957a4',scale:.7}).setLngLat([c.longitude,c.latitude]).setPopup(new maplibregl.Popup().setText(money(c.original_price)+' · '+c.area_sqm+' m² · '+c.sale_date.slice(0,7))).addTo(m)));
     return()=>markers.forEach(m=>m.remove());
-  },[selected,result]);
+  },[selected,result,location]);
   useEffect(()=>{
     setEvidence(null);if(!location){setDiscovering(false);return;}
     let active=true;setDiscovering(true);
@@ -87,7 +89,9 @@ function App(){
         <section><h2>Comparable sales · {result.comparable_sales_used.length}</h2>{result.comparable_sales_used.map(c=><article key={c.sale_id}><b>{properties.find(p=>p.property_id===c.property_id)?.address||c.property_id}</b><span>Recorded {money(c.original_price)} · {c.sale_date.slice(0,7)}</span><span>{c.area_sqm} m² · {Math.round(c.distance_m)} m away · same flat type</span><span>Adjusted: {money(c.adjusted_price)} · {money(c.adjusted_price_per_sqm)}/m²</span><span>Area similarity: {Math.round(c.similarity*100)}%</span><a href={c.source_reference} target="_blank" rel="noreferrer">Source transaction ↗</a></article>)}</section>
         <details><summary>Sources, methodology & reproducibility</summary><p>Data: {result.data_version} · through {result.data_date}</p><p>Method: {result.valuation_method} · model: {result.model_version}</p><p>{result.input_assumptions?.join(' ')}</p><p>{result.interval_method} Calibration predictions: {result.calibration_count}.</p><p>{result.sources.join('; ')}</p><a href={'/valuations/'+result.valuation_id} target="_blank" rel="noreferrer">Open saved valuation receipt (JSON)</a></details>
       </>}
-    </>}{!selected&&error&&<p role="alert">{error}</p>}</aside>
+    </>}{!selected&&error&&<p role="alert">{error}</p>}
+    {(location||selected)&&<EvidencePanel latitude={location?location.lat:selected.latitude} longitude={location?location.lon:selected.longitude} address={location?location.name:selected.address} propertyId={selected?.property_id} currency={selected?.currency||'USD'}/>}
+    </aside>
   </main></>;
 }
 createRoot(document.getElementById('root')).render(<App/>);
