@@ -8,9 +8,19 @@ from fastapi.staticfiles import StaticFiles
 from .repository import Repository, ROOT
 from .models import ValuationRequest
 from .valuation import value_property
+from .evidence import EvidenceDiscovery
+from pydantic import BaseModel, Field
 
 repository=Repository()
+discovery=EvidenceDiscovery(repository)
 app=FastAPI(title='AVM · residential evidence')
+class EvidenceRequest(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+@app.post('/evidence/discover')
+def discover_evidence(request: EvidenceRequest):
+    return discovery.discover(request.latitude, request.longitude)
 @app.get('/health')
 def health(): return {'status':'ok','storage':'postgis' if repository.url else 'snapshot'}
 @app.get('/metadata')
@@ -55,10 +65,10 @@ place_lock=threading.Lock()
 def fetch_places(query):
     global last_place_request
     # User-triggered address search only; respect Nominatim's one request/second policy.
-    with place_lock:
-        delay=1-(time.monotonic()-last_place_request)
+    with discovery.lock:
+        delay=1-(time.monotonic()-discovery.last_request)
         if delay>0: time.sleep(delay)
-        last_place_request=time.monotonic()
+        discovery.last_request=time.monotonic()
         url='https://nominatim.openstreetmap.org/search?'+urllib.parse.urlencode({'q':query,'format':'jsonv2','limit':5})
         req=urllib.request.Request(url,headers={'User-Agent':'AVM-ResearchPreview/1.0 (https://github.com/Intellora-ai/AVM)'})
         with urllib.request.urlopen(req,timeout=15) as response: return json.load(response)

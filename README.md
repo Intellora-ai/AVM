@@ -71,3 +71,24 @@ Singapore streets use the official Singapore Land Authority OneMap public basema
 HDB sales/buildings: data.gov.sg and original Singapore government data terms. Coordinates: ayaka14732/singapore-hdb-map, OneMap-derived; source URI and hashes retained. Natural Earth: public-domain geography via nvkelso/natural-earth-vector. OpenStreetMap: © contributors, ODbL. Existing mirrored-sample license notice is retained for the older archived sample. The application MIT license does not relicense third-party data.
 
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
+# On-demand worldwide discovery
+
+Click anywhere on the world map or select a worldwide address search result.
+The client calls `POST /evidence/discover` with latitude/longitude. The server
+fetches OpenStreetMap/Nominatim address evidence only on demand, shares a
+one-request-per-second limit with address search, and caches successful lookups
+on disk for 24 hours. Source errors are shown and are not cached. No paid API key
+is needed. OpenStreetMap addresses are map evidence, not verified sale records.
+
+In Singapore, the source adapter offers nearby official HDB block/type profiles
+within 100 metres for explicit selection. Selection runs the existing valuation
+pipeline and saves its reproducible evidence receipt. A nearby building is never
+silently treated as the selected apartment. Elsewhere the lookup returns
+insufficient evidence: worldwide address discovery is implemented; worldwide
+transaction connectors and reliable valuations are not yet implemented.
+
+The existing official Singapore archives remain available for historical tests,
+calibration and reproducibility. On-demand retrieval does not replace those
+requirements. New market adapters must provide verified sales, characteristics,
+currency, provenance, date semantics and historical validation before enabling
+estimates. Discovery cache files are ignored by Git under `data/evidence-cache`.
