@@ -73,6 +73,13 @@ HDB sales/buildings: data.gov.sg and original Singapore government data terms. C
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
 # On-demand worldwide discovery
 
+The primary journey is now **enter address → resolve/select property → valuation**.
+The app does not preload or draw a worldwide property-dot layer. Supported address
+suggestions are fetched in batches of at most 20; ambiguous block/type matches
+require selection. Comparable markers are off by default and can be enabled for
+the selected valuation. A tilted map and an external Mapillary imagery link are
+available; photorealistic 3D buildings and embedded street panoramas are not implemented.
+
 The map panel now also includes **On-demand property intelligence**. It automatically
 queries applicable NYC official sales, accepts public listing URLs, extracts and
 classifies structured evidence, detects duplicates, scores comparability, and saves

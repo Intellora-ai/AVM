@@ -1,7 +1,7 @@
 from datetime import date
 import re,json,time,urllib.request,urllib.parse,gzip,csv,io,threading
 from functools import lru_cache
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import Response
 import httpx
 from fastapi.staticfiles import StaticFiles
@@ -61,7 +61,7 @@ def intelligence_receipt(key:str):
 @app.get('/health')
 def health(): return {'status':'ok','storage':'postgis' if repository.url else 'snapshot'}
 @app.get('/metadata')
-def metadata(): return {**{k:v for k,v in repository.snapshot.items() if k not in ('properties','sales')},'data_version':repository.version,'historical_records_archived':sum(a['rows'] for a in repository.archives),'history_start':'1990-01' if repository.archives else '2017-01'}
+def metadata(): return {**{k:v for k,v in repository.snapshot.items() if k not in ('properties','sales')},'property_count':len(repository.properties),'data_version':repository.version,'historical_records_archived':sum(a['rows'] for a in repository.archives),'history_start':'1990-01' if repository.archives else '2017-01'}
 @app.get('/coverage')
 def coverage(): return json.loads((ROOT/'data/coverage.json').read_text())
 @app.get('/benchmark')
@@ -129,8 +129,8 @@ def places(q:str):
     try: return fetch_places(q)
     except Exception: raise HTTPException(503,'Global address lookup is currently unavailable. Navigate the map or search supported properties.')
 @app.get('/properties')
-def properties(q:str=''):
-    return [p for p in repository.properties.values() if q.lower() in (p.address+' '+p.property_id).lower()]
+def properties(q:str='',limit:int=Query(default=20000,ge=1,le=20000)):
+    return [p for p in repository.properties.values() if q.lower() in (p.address+' '+p.property_id+' '+p.property_type).lower()][:limit]
 @app.post('/valuations')
 def valuation(request:ValuationRequest):
     target=repository.properties.get(request.property_id)
