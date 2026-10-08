@@ -12,15 +12,35 @@ from .evidence import EvidenceDiscovery
 from pydantic import BaseModel, Field
 from .intelligence import Intelligence, IntelligenceRequest
 from .geometry import MeasurementRequest, measure
+from .integrations import search_address,imagery
+from .footprints import fetch_footprints
 
 repository=Repository()
 discovery=EvidenceDiscovery(repository)
 intelligence=Intelligence(discovery, ROOT)
 app=FastAPI(title='AVM · residential evidence')
+@app.get('/web-search')
+def web_search(address:str=Query(min_length=3,max_length=300),neighbourhood:str=Query(default='',max_length=100)):
+    return search_address(address,neighbourhood)
+
+@app.get('/imagery')
+def property_imagery(latitude:float=Query(ge=-90,le=90),longitude:float=Query(ge=-180,le=180)):
+    return imagery(latitude,longitude)
+
+@app.get('/footprints')
+def property_footprints(latitude:float=Query(ge=-85,le=85),longitude:float=Query(ge=-180,le=180)):
+    return fetch_footprints(latitude,longitude,ROOT)
 @app.post('/measurements')
 def measurement(request:MeasurementRequest):
     try:result=measure(request)
     except ValueError as exc:raise HTTPException(422,str(exc))
+    if repository.url:
+        import psycopg
+        from psycopg.types.json import Jsonb
+        with psycopg.connect(repository.url) as db:
+            db.execute('CREATE TABLE IF NOT EXISTS avm_measurements(id text PRIMARY KEY, outline geography(Polygon,4326), payload jsonb NOT NULL)')
+            db.execute('CREATE INDEX IF NOT EXISTS avm_measurements_geo ON avm_measurements USING gist(outline)')
+            db.execute('INSERT INTO avm_measurements VALUES (%s,ST_SetSRID(ST_GeomFromGeoJSON(%s),4326)::geography,%s) ON CONFLICT DO NOTHING',(result['measurement_id'],json.dumps(result['geometry']),Jsonb(result)))
     path=ROOT/'data/measurements';path.mkdir(exist_ok=True)
     (path/(result['measurement_id']+'.json')).write_text(json.dumps(result))
     return result
@@ -28,6 +48,13 @@ def measurement(request:MeasurementRequest):
 @app.get('/measurements/{key}')
 def measurement_receipt(key:str):
     if not re.fullmatch('[a-f0-9]{64}',key):raise HTTPException(404)
+    if repository.url:
+        import psycopg
+        with psycopg.connect(repository.url) as db:
+            exists=db.execute("SELECT to_regclass('public.avm_measurements')").fetchone()[0]
+            if exists:
+                row=db.execute('SELECT payload FROM avm_measurements WHERE id=%s',(key,)).fetchone()
+                if row:return row[0]
     path=ROOT/'data/measurements'/(key+'.json')
     if not path.exists():raise HTTPException(404)
     return json.loads(path.read_text())

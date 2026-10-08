@@ -1,0 +1,21 @@
+import React,{useEffect,useRef,useState} from 'react';
+let cesiumLoader;
+function loadCesium(){if(window.Cesium)return Promise.resolve(window.Cesium);if(!cesiumLoader)cesiumLoader=new Promise((resolve,reject)=>{const base='https://cdn.jsdelivr.net/npm/cesium@1.134.1/Build/Cesium/';window.CESIUM_BASE_URL=base;const css=document.createElement('link');css.rel='stylesheet';css.href=base+'Widgets/widgets.css';document.head.appendChild(css);const script=document.createElement('script');script.src=base+'Cesium.js';script.onload=()=>resolve(window.Cesium);script.onerror=()=>{cesiumLoader=null;reject(Error('3D viewer unavailable'))};document.head.appendChild(script)});return cesiumLoader;}
+function GoogleTiles({config,latitude,longitude,onFailure}){
+  const element=useRef(null);
+  useEffect(()=>{let disposed=false,viewer;loadCesium().then(async C=>{if(disposed)return;viewer=new C.Viewer(element.current,{baseLayer:false,globe:false,animation:false,timeline:false,geocoder:false,sceneModePicker:false,baseLayerPicker:false,navigationHelpButton:false,homeButton:false});const tiles=await C.createGooglePhotorealistic3DTileset({key:config.browser_key});if(disposed){tiles.destroy();return}viewer.scene.primitives.add(tiles);viewer.camera.lookAt(C.Cartesian3.fromDegrees(longitude,latitude),new C.HeadingPitchRange(0,C.Math.toRadians(-45),600));viewer.camera.lookAtTransform(C.Matrix4.IDENTITY)}).catch(()=>{if(!disposed)onFailure()});return()=>{disposed=true;if(viewer&&!viewer.isDestroyed())viewer.destroy()}},[config.browser_key,latitude,longitude]);
+  return <div ref={element} style={{height:360,width:'100%'}} aria-label="Google photorealistic 3D tiles"/>;
+}
+export default function ImageryPanel({latitude,longitude}){
+  const [config,setConfig]=useState(null),[mode,setMode]=useState('fallback'),[failed,setFailed]=useState(false);
+  useEffect(()=>{const controller=new AbortController();setConfig(null);setMode('fallback');setFailed(false);fetch(`/imagery?latitude=${latitude}&longitude=${longitude}`,{signal:controller.signal}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(c=>{setConfig(c);if(c.street_view==='available')setMode('street')}).catch(()=>{if(!controller.signal.aborted)setConfig({street_view:"unavailable",browser_key:null,three_d_enabled:false})});return()=>controller.abort()},[latitude,longitude]);
+  const params=new URLSearchParams({key:config?.browser_key||''});
+  if(mode==='street'){if(config?.panorama_id)params.set('pano',config.panorama_id);else params.set('location',`${latitude},${longitude}`)}else{params.set('center',`${latitude},${longitude}`);params.set('zoom','18');params.set('maptype','satellite')}
+  return <section><h2>Street imagery and 3D context</h2><p>Street View: {config?.street_view||'checking availability'}</p>
+    {config?.street_view==='available'&&<button className="secondary" onClick={()=>{setMode('street');setFailed(false)}}>360° Street View</button>}{' '}
+    {config?.browser_key&&<button className="secondary" onClick={()=>{setMode('satellite');setFailed(false)}}>Satellite</button>}{' '}
+    {config?.three_d_enabled&&<button className="secondary" onClick={()=>{setMode('3d');setFailed(false)}}>Google photorealistic 3D</button>}
+    {mode==='3d'&&!failed?<GoogleTiles config={config} latitude={latitude} longitude={longitude} onFailure={()=>{setFailed(true);setMode('satellite')}}/>:config?.browser_key&&mode!=='fallback'?<iframe title={mode==='street'?'Google 360 degree Street View':'Google satellite view'} width="100%" height="320" style={{border:0}} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" src={`https://www.google.com/maps/embed/v1/${mode==='street'?'streetview':'view'}?${params}`}/>:<p className="muted">Google API keys are not configured. OpenStreetMap and outline measurement remain available.</p>}
+    {failed&&<p>3D unavailable; switched to satellite view. Coverage and API permissions vary.</p>}<p><a href={`https://www.google.com/maps/@${latitude},${longitude},19z/data=!3m1!1e3`} target="_blank" rel="noreferrer">Open satellite viewer ↗</a></p><p className="muted">Imagery shows visual context, not verified parcel boundaries. Google services require enabled APIs, appropriate keys and applicable billing.</p>
+  </section>;
+}

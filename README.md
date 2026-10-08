@@ -73,6 +73,12 @@ HDB sales/buildings: data.gov.sg and original Singapore government data terms. C
 This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.
 # On-demand worldwide discovery
 
+Automatic Brave web-search and optional Google 360° Street View/Photorealistic 3D
+Tiles integrations are now available behind API-key configuration. OSM building
+footprint lookup requests only a 125 m area around the selected address; source
+failures leave drawing/import available. No parcel is invented from a building
+outline. See [configuration, tested behavior and exclusions](docs/SOURCE_INTEGRATIONS.md).
+
 After selecting an address, use **Measure plot or building outline**. Draw the
 boundary on the map or import one Polygon GeoJSON outline, then finish to obtain
 WGS84 area in m²/ft², perimeter and a saved coordinate receipt. Google satellite

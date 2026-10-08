@@ -15,4 +15,6 @@ if [[ "${OSTYPE:-}" == darwin* ]]; then
      sleep 1
    done) &
 fi
-exec .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+avm_env_args=()
+if [ -f .env ]; then avm_env_args=(--env-file .env); fi
+exec .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 "${avm_env_args[@]}"

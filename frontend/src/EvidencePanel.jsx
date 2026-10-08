@@ -24,6 +24,7 @@ export default function EvidencePanel({latitude,longitude,address,propertyId,cur
     {error&&<p role="alert">{error}</p>}
     {result&&<><p className="notice">{result.estimated_value?`Transaction-backed estimate: ${format(result.estimated_value)}`:'Insufficient evidence for a reliable property valuation.'} {result.confidence_reason}</p>
       <p>{result.evidence.length} unique records · {result.duplicates.length} duplicates removed</p>
+      <details open><summary>Automatic web search · {result.web_search?.status||'unavailable'}</summary>{result.web_search?.reason&&<p>{result.web_search.reason}</p>}{result.web_search?.results.map(r=><article key={r.url}><a href={r.url} target="_blank" rel="noreferrer">{r.title||r.url}</a><span>{r.description}</span><small>Search result; price and property identity are unverified.</small></article>)}</details>
       {result.signals.map(s=><article key={s.method}><b>{s.method}: {format(s.value)}</b><span>Observed dispersion {format(s.observed_low)} – {format(s.observed_high)}</span><span>{s.assumption} Unvalidated supporting indication.</span></article>)}
       {result.signal_disagreement!=null&&<p>Signal disagreement: {Math.round(result.signal_disagreement*100)}%</p>}
       {result.source_results.map((s,i)=><p key={i}><a href={s.url} target="_blank" rel="noreferrer">{s.url}</a><br/>{s.status}{s.rows_received!=null&&` · ${s.rows_received} fetched / ${s.usable_one_family_records} usable single-family records`}</p>)}

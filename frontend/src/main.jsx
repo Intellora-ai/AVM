@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './style.css';
 import EvidencePanel from './EvidencePanel';
 import GeometryPanel from './GeometryPanel';
+import ImageryPanel from './ImageryPanel';
 const money=n=>n==null?'Unavailable':new Intl.NumberFormat('en-SG',{style:'currency',currency:'SGD',maximumFractionDigits:0}).format(n);
 async function api(path,options){const r=await fetch(path,options);if(!r.ok)throw Error((await r.json()).detail||'Request failed');return r.json();}
 function Timeline({result}){
@@ -82,6 +83,7 @@ function App(){
       </>}
     </>}{!selected&&error&&<p role="alert">{error}</p>}
     {(location||selected)&&<p><a target="_blank" rel="noreferrer" href={'https://www.mapillary.com/app/?lat='+(location?location.lat:selected.latitude)+'&lng='+(location?location.lon:selected.longitude)+'&z=17'}>Check available street imagery on Mapillary ↗</a><br/><small>External imagery; coverage varies. Tilted map is not a 3D building model.</small></p>}
+    {(location||selected)&&<ImageryPanel latitude={location?location.lat:selected.latitude} longitude={location?location.lon:selected.longitude}/>}
     {(location||selected)&&<GeometryPanel map={map.current} latitude={location?location.lat:selected.latitude} longitude={location?location.lon:selected.longitude}/>}
     {(location||selected)&&<EvidencePanel latitude={location?location.lat:selected.latitude} longitude={location?location.lon:selected.longitude} address={location?location.name:selected.address} propertyId={selected?.property_id} currency={selected?.currency||'USD'}/>}
     </aside>

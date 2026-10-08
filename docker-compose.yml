@@ -4,6 +4,10 @@ services:
     ports: ["8000:8000"]
     environment:
       DATABASE_URL: postgresql://avm:avm@postgres:5432/avm
+      BRAVE_SEARCH_API_KEY: ${BRAVE_SEARCH_API_KEY:-}
+      GOOGLE_MAPS_SERVER_KEY: ${GOOGLE_MAPS_SERVER_KEY:-}
+      GOOGLE_MAPS_BROWSER_KEY: ${GOOGLE_MAPS_BROWSER_KEY:-}
+      GOOGLE_3D_TILES_ENABLED: ${GOOGLE_3D_TILES_ENABLED:-false}
     depends_on:
       postgres:
         condition: service_healthy

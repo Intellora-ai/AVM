@@ -17,7 +17,7 @@ from urllib.parse import urljoin, urlsplit, urlunsplit
 import httpx
 from pydantic import BaseModel, Field
 
-VERSION = 'web-evidence-1'
+VERSION = 'web-evidence-2'
 RELIABILITY = {'registered_transaction': .95, 'closed_sale': .8,
     'asking_price': .45, 'rental_price': .45, 'auction': .35,
     'historical_asking_price': .25, 'historical_rental_price': .25,
@@ -234,6 +234,11 @@ class Intelligence:
         self.discovery = discovery; self.root = Path(root)
     def run(self, request):
         location = self.discovery.discover(request.latitude, request.longitude)
+        from .integrations import search_address
+        resolved=location.get('address') or {}
+        parts=resolved.get('address') or {}
+        address=request.address if request.address and request.address!='Selected map location' else resolved.get('display_name','')
+        search=search_address(address,parts.get('neighbourhood',parts.get('suburb','')))
         records = []; source_results = []
         now = datetime.now(timezone.utc).isoformat()
         directory = self.root / 'data/web-evidence'; directory.mkdir(parents=True, exist_ok=True)
@@ -285,9 +290,9 @@ class Intelligence:
             'duplicates': duplicates, 'eligible_comparables': eligible, 'rejected_evidence': rejected,
             'signals': signals, 'signal_disagreement': disagreement,
             'historical_value': None, 'forecasts': [],
-            'source_results': source_results, 'valuation_date': date.today().isoformat(), 'retrieved_at': now,
+            'source_results': source_results, 'web_search':search,'valuation_date': date.today().isoformat(), 'retrieved_at': now,
             'model_version': VERSION, 'data_version': self.discovery.repository.version,
-            'limitations': ['Web discovery currently uses address lookup and supplied public source URLs; automated web search is not connected.',
+            'limitations': ['Automatic search requires a configured Brave Search key. Search snippets are discovery links, not verified prices. Only supplied URLs are fetched for structured extraction.',
                 'No rental yield, local appreciation rate or transaction completion is inferred from an advertisement.',
                 'Signal ranges describe observed dispersion, not calibrated valuation intervals.',
                 'Nearby block/type choices require explicit selection; they do not resolve an individual apartment.']}
