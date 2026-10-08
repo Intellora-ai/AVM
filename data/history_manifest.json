@@ -1,0 +1,30 @@
+[
+  {
+    "dataset_id": "d_43f493c6c50d54243cc1eab0df142d6a",
+    "sha256": "5f6a72bd7b9120281863beb1fc4c89aa5f4923f00b0f6c52494c4347363f2c36",
+    "file": "history-5f6a72bd7b9120281863beb1fc4c89aa5f4923f00b0f6c52494c4347363f2c36.csv.gz",
+    "source": "https://data.gov.sg/datasets/d_43f493c6c50d54243cc1eab0df142d6a/view",
+    "rows": 369651
+  },
+  {
+    "dataset_id": "d_2d5ff9ea31397b66239f245f57751537",
+    "sha256": "6a16e2dc78f70048ec1a522b59a9727581c36e45e02022641c53e755a7657c72",
+    "file": "history-6a16e2dc78f70048ec1a522b59a9727581c36e45e02022641c53e755a7657c72.csv.gz",
+    "source": "https://data.gov.sg/datasets/d_2d5ff9ea31397b66239f245f57751537/view",
+    "rows": 52203
+  },
+  {
+    "dataset_id": "d_ebc5ab87086db484f88045b47411ebc5",
+    "sha256": "2e064923f41cc96536db04c978901695aa0191022829895cf4ce177e42afad57",
+    "file": "history-2e064923f41cc96536db04c978901695aa0191022829895cf4ce177e42afad57.csv.gz",
+    "source": "https://data.gov.sg/datasets/d_ebc5ab87086db484f88045b47411ebc5/view",
+    "rows": 287196
+  },
+  {
+    "dataset_id": "d_ea9ed51da2787afaf8e51f827c304208",
+    "sha256": "4ff7ce4a4f642fb384d2b75a42e75b0477e50005f4aaa9989591a7a92507d185",
+    "file": "history-4ff7ce4a4f642fb384d2b75a42e75b0477e50005f4aaa9989591a7a92507d185.csv.gz",
+    "source": "https://data.gov.sg/datasets/d_ea9ed51da2787afaf8e51f827c304208/view",
+    "rows": 37153
+  }
+]

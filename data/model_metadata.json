@@ -1,0 +1,10 @@
+{
+  "data_version": "7a2ba85b422adb5f",
+  "model_version": "hist_gradient_boosting-1-968fc592d0c6",
+  "valid_from": "2026-01-01",
+  "evaluated_through": "2026-09-30",
+  "sha256": "968fc592d0c68c8ce678d740f02a64c36d0d6ff9c30aa91ac6687eb3c4787427",
+  "calibration_log_error_quantile": 0.10325144109467657,
+  "calibration_count": 10778,
+  "test_interval_coverage": 0.8501960384948317
+}

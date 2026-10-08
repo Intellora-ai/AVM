@@ -1,0 +1,18 @@
+{
+  "snapshot_version": "7a2ba85b422adb5f",
+  "sample_rule": "First 250 January\u2013September 2026 records by SHA-256 sale ID; fixed before scoring",
+  "sample_count": 250,
+  "valued_count": 249,
+  "abstained_count": 1,
+  "metrics": {
+    "count": 249,
+    "median_absolute_percentage_error": 6.492687155093946,
+    "mean_absolute_percentage_error": 8.843169070001885,
+    "within_10_percent": 0.6987951807228916,
+    "within_20_percent": 0.9116465863453815,
+    "median_prediction_sale_ratio": 1.0108487636970787,
+    "cod": 8.668103631450567,
+    "mae_currency": 57503.82180841083
+  },
+  "limitations": "Known sold-flat area. Earlier-date comparisons only; no formal interval or forecast evaluation here. This sample is not the full ML test cohort."
+}

@@ -25,7 +25,7 @@ def comparable_sales(target,sales,on,candidates=None):
         ratio=min(target.area_sqm,s.area_sqm)/max(target.area_sqm,s.area_sqm)
         if s.property_id==target.property_id or not 0<age<=730 or distance>2000 or ratio<.75 or s.property_type!=target.property_type: continue
         adjusted=s.price*exp(trend*age/365.25)
-        c=ComparableUsed(sale_id=s.sale_id,property_id=s.property_id,sale_date=s.sale_date,distance_m=round(distance,1),similarity=ratio,recency_weight=exp(-age/365)/(1+distance/500),adjusted_price=round(adjusted,2),adjusted_price_per_sqm=adjusted/s.area_sqm,latitude=s.latitude,longitude=s.longitude,original_price=s.price,area_sqm=s.area_sqm,source=s.source,source_reference=s.source_reference)
+        c=ComparableUsed(sale_id=s.sale_id,property_id=s.property_id,sale_date=s.sale_date,distance_m=round(distance,1),similarity=ratio,recency_weight=exp(-age/365)/(1+distance/500),adjusted_price=round(adjusted,2),adjusted_price_per_sqm=adjusted/s.area_sqm,latitude=s.latitude,longitude=s.longitude,original_price=s.price,area_sqm=s.area_sqm,source=s.source,source_reference=s.source_reference,flat_model=s.flat_model,storey_range=s.storey_range)
         ranked.append(c)
     return sorted(ranked,key=lambda c:c.similarity*c.recency_weight,reverse=True)[:12]
 
@@ -64,6 +64,6 @@ def value_property(target,sales,on,indices=None,*,data_version='unknown',data_da
     result.confidence_label='moderate' if q<.2 else 'low'
     result.interval_method='90% absolute log-error quantile from earlier rolling historical predictions; coverage not guaranteed.'
     trend=annual_trend([s for s in sales if s.property_id!=target.property_id],on)
-    result.forecast_method=f'Historical local median price/m² trend ({100*(exp(trend)-1):.1f}% annual), compounded; widening residual scenarios. Mix changes may bias trend.'
+    result.forecast_method=f'Historical town/type median price/m² trend ({100*(exp(trend)-1):.1f}% annual), compounded; widening residual scenarios. Mix changes may bias trend.'
     result.forecasts=[ForecastScenario(months=m,lower=round(estimate*exp(trend*m/12-q*sqrt(1+m/12))),central=round(estimate*exp(trend*m/12)),upper=round(estimate*exp(trend*m/12+q*sqrt(1+m/12)))) for m in (12,24,36)]
     return result

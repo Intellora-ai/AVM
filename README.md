@@ -1,10 +1,10 @@
-# AVM — residential evidence explorer
+# AVM — residential property evidence
 
-Interactive MapLibre/OpenStreetMap map, address search, block detail panel, recorded sale evidence, calibrated comparable estimates, scenario forecasts and saved JSON receipts.
+Global MapLibre/OpenStreetMap map and address discovery, official Singapore HDB resale evidence, dated valuations, scenario forecasts, historical charts and reproducible receipts. No Google Maps or paid AI API.
 
-## Run on Mac
+## Open locally on Mac
 
-Install Python 3 and Node.js LTS once. From Terminal:
+Install Python 3 and Node.js LTS, then:
 
 ```bash
 git clone https://github.com/Intellora-ai/AVM.git
@@ -12,45 +12,62 @@ cd AVM
 bash start.command
 ```
 
-If already cloned: `cd ~/AVM && git pull --ff-only && bash start.command`.
+Already cloned:
 
-Open **http://localhost:8000**. Keep the terminal open. One server serves both frontend and API. This local mode uses the immutable JSON data snapshot and stores receipts in ignored `data/receipts/`.
+```bash
+cd ~/AVM
+git pull --ff-only origin main
+bash start.command
+```
 
-## PostgreSQL/PostGIS mode
+Open **http://localhost:8000** and leave the terminal running. Python 3.14 Apple Silicon wheels were checked for the previous requirement set; scikit-learn is now also required for the bundled challenger. The local app uses the compressed immutable snapshot and saves receipts in ignored data/receipts.
 
-With Docker Desktop running:
+Explore Singapore, search **173 ANG MO KIO AVE 4**, select a flat type and see past recorded sales, a current estimate and 12/24/36-month scenarios. Supply actual area, storey range and flat model when known to enable the evaluated challenger where evidence supports it. Change the date for a historical estimate.
+
+## Actual coverage and data
+
+The direct official data.gov.sg acquisition contains **988,459 resale records from 1990–2026**: 242,256 recent records in the active snapshot and 746,203 older archived rows. The active inventory contains **16,938 block/type profiles** across all published Singapore HDB residential resale types. It was retrieved 8 October 2026. October is an incomplete reported month; valuations conservatively use earlier completed months through September. Older records are joined lazily to present matched blocks; demolished/unmatched historic blocks are not claimed as supported.
+
+HDB withholds unit identities. Recorded sales belong to the block/type, not necessarily the selected apartment. Area is supplied by the buyer or inferred from strictly earlier block/type records. The model does not know condition or renovations. Coordinates are from a pinned OneMap-derived public mirror matched to official building keys.
+
+Worldwide address lookup is geographic discovery. France, England/Wales and NYC official acquisition was attempted but blocked by this cloud's network policy. These markets are not claimed as valued. See data/coverage.json and [research and launch requirements](docs/VALUATION_RESEARCH.md).
+
+## Accuracy and methods
+
+Reused scikit-learn log-price ridge and histogram gradient boosting. Training ends June 2025; selection/calibration ends December 2025; later test data are January–September 2026. Every flat type at approximately 10% of building coordinates is held out together and reported separately.
+
+On **19,639 later sales**, gradient boosting had **4.51% median absolute error**, versus 6.57% for ridge; 83.98% of boosting predictions were within ±10%. On 1,966 sales at unseen building coordinates its median error was 4.98%. These results use known sale attributes and do not establish global or future-price accuracy. Its nominal 90% band covered 85.02% of later sales; coverage is not guaranteed.
+
+Comparable valuation uses earlier sales, same type, nearby location and area similarity; observed town/type price trends adjust older prices. It requires five comparable transactions across three other profiles and twenty historical calibration predictions. The challenger additionally requires user area/floor/model, a consistent recorded lease year, an evaluated effective-date range and corroborating comparable evidence. Older dates use comparable estimation; unsupported dates or characteristics abstain.
+
+Future values are conditional trend scenarios with widening ranges, not verified transactions or validated individual-property forecasts. Past estimates are reconstructions from today's snapshot, not proof of contemporaneous knowledge.
+
+## Reproduce data, evaluation and receipts
+
+```bash
+.venv/bin/python scripts/import_hdb.py
+.venv/bin/python scripts/archive_history.py
+OMP_NUM_THREADS=2 .venv/bin/python scripts/benchmark.py
+.venv/bin/python -m pytest -q
+cd frontend && npm ci && npm run build
+```
+
+Raw official CSVs, hashes, a compressed snapshot, benchmark metrics and a checksum-protected model artifact are bundled. Model/data version mismatch disables the challenger until a new benchmark is run. POST /valuations returns a content-addressed receipt; GET /valuations/{id} retrieves that saved output. GET /source-records/{sale_id} shows the original official CSV row from the current source snapshot.
+
+## PostgreSQL/PostGIS
+
+With Docker Desktop:
 
 ```bash
 docker compose up --build
 ```
 
-Open the same address. This runs the actual spatial comparable query in PostGIS and persists input snapshots and valuation receipts in a named volume. Development API can also use `DATABASE_URL=postgresql://avm:avm@localhost:55432/avm`.
+Open the same port 8000. Snapshots, spatial sale evidence and receipts persist in Postgres. DATABASE_URL enables the database adapter; without it, local spatial indexing and snapshot storage support the preview. Live processes must restart after a cloud snapshot restore.
 
-## Data and precise limits
+## Mapping and attribution
 
-The included public-mirror snapshot contains 2,672 Singapore HDB 4-room block profiles and 3,852 resale records through **November 2025**. Every sale retains its pinned original file and row reference. SHA-256 source hashes and a content version are retained in the snapshot. Data acquisition is reproducible with `python3 scripts/import_hdb.py`.
+Singapore streets use the official Singapore Land Authority OneMap public basemap, tested by direct tile requests. Global street tiles use OpenStreetMap's public service; cloud/datacenter requests may be denied under its tile policy. Bundled public-domain Natural Earth country geography supplies a global fallback; it is not a street map. VITE_TILE_URL can specify a self-hosted or policy-compliant raster service at frontend build time.
 
-**This is a block-profile research preview, not the completed individual-property MVP.** HDB does not disclose unit IDs. A block's multiple sales cannot be represented as one apartment's sale history. Profile floor area is the median of available block sales, not a verified individual flat size. Bedrooms and bathrooms remain unknown. The public mirror is incomplete and has not been independently reconciled with the official dataset. Official download access was blocked by the cloud network policy. No transaction is labelled independently verified.
+HDB sales/buildings: data.gov.sg and original Singapore government data terms. Coordinates: ayaka14732/singapore-hdb-map, OneMap-derived; source URI and hashes retained. Natural Earth: public-domain geography via nvkelso/natural-earth-vector. OpenStreetMap: © contributors, ODbL. Existing mirrored-sample license notice is retained for the older archived sample. The application MIT license does not relicense third-party data.
 
-The default date is today. Data older than 180 days causes an explicit insufficient-evidence response. Click **Explore at latest dataset date** to inspect a historical estimate. Example: search **173 ANG MO KIO AVE 4**, select it, then use the dataset-date button. This does not claim a current market value.
-
-## Model
-
-Pure functions in `app/valuation.py` select up to 12 earlier sales within 2km, same type, size ratio >= .75; exclude the subject block; require five sales across three other blocks. A city/type median price-per-m² trend adjusts prices, weighted by size similarity, distance and age. The sample's changing mix may bias this trend; it is not an official index.
-
-Ranges use the 90th percentile of absolute log prediction errors from up to 80 strictly earlier rolling predictions, requiring 20 usable results. These are historical calibration errors, not a guarantee of 90% future coverage. Forecasts compound the observed annual trend (capped at ±20% log growth) and widen the residual range with horizon. They are conditional scenarios, not independently validated forecasts. Confidence is an evidence-quality label, not a probability.
-
-Snapshot version, data cutoff, model version, source rows, comparable adjustments and complete output are preserved in content-addressed valuation receipts. POST `/valuations` then GET `/valuations/{valuation_id}`.
-
-## Validation
-
-```bash
-.venv/bin/python -m pytest -q
-cd frontend && npm ci && npm run build
-```
-
-Tests cover temporal leakage, calibration, forecasts, sparse/stale evidence, missing size, property search and receipt retrieval. Real market accuracy and live forecast coverage remain unvalidated.
-
-## Attribution
-
-Sales mirror: [Claratxy/HDB-Resale-Rest-API](https://github.com/Claratxy/HDB-Resale-Rest-API), MIT, copyright 2026 Tan Xin Yue; original source HDB/data.gov.sg. Coordinates: [ayaka14732/singapore-hdb-map](https://github.com/ayaka14732/singapore-hdb-map), derived from HDB Property Information and Singapore Land Authority OneMap. Exact pinned URLs are in `data/snapshot.json`. Upstream data terms apply; the application MIT license does not relicense third-party data. Map tiles © OpenStreetMap contributors; respect the public tile service policy. Production can substitute a self-hosted raster tile URL.
+This is a buyer research tool. Private residential Singapore property, exact apartment history and majority-world valuation coverage have not yet been demonstrated. Public hosting, HTTPS, backups and ongoing refresh/monitoring remain deployment work.

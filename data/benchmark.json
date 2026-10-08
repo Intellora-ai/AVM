@@ -1,0 +1,226 @@
+{
+  "data_version": "7a2ba85b422adb5f",
+  "currency": "SGD",
+  "train_through": "2025-06-30",
+  "calibration_through": "2025-12-31",
+  "test_through": "2026-09-30",
+  "spatial_holdout": "Approximately 10% of building coordinates, across every flat type, excluded from training and calibration; reported separately. Not an entire-region holdout.",
+  "train_count": 188909,
+  "calibration_count": 10778,
+  "models": {
+    "log_ridge": {
+      "calibration": {
+        "count": 10778,
+        "median_absolute_percentage_error": 5.920087202907132,
+        "mean_absolute_percentage_error": 7.234237139114811,
+        "within_10_percent": 0.7425310818333642,
+        "within_20_percent": 0.9637223974763407,
+        "median_prediction_sale_ratio": 0.9841940308288002,
+        "cod": 7.237992908339175,
+        "mae_currency": 47295.83694405401
+      },
+      "test": {
+        "count": 19639,
+        "median_absolute_percentage_error": 6.570314228833474,
+        "mean_absolute_percentage_error": 8.292818073608643,
+        "within_10_percent": 0.6889352818371608,
+        "within_20_percent": 0.9330923163093844,
+        "median_prediction_sale_ratio": 1.0282660694488224,
+        "cod": 7.736122429489643,
+        "mae_currency": 53046.59105855796
+      },
+      "unseen_block_test": {
+        "count": 1966,
+        "median_absolute_percentage_error": 6.631631313400571,
+        "mean_absolute_percentage_error": 8.622854912786154,
+        "within_10_percent": 0.676500508646999,
+        "within_20_percent": 0.9201424211597151,
+        "median_prediction_sale_ratio": 1.0256834127021692,
+        "cod": 8.123537878346557,
+        "mae_currency": 56076.5059115668
+      },
+      "interval_90_nominal_coverage": 0.8719894088293701,
+      "calibration_log_error_quantile": 0.15251470226653066,
+      "by_type": {
+        "1 ROOM": {
+          "count": 8,
+          "median_absolute_percentage_error": 4.915579250620084,
+          "mean_absolute_percentage_error": 5.919709832164896,
+          "within_10_percent": 0.875,
+          "within_20_percent": 1.0,
+          "median_prediction_sale_ratio": 1.049155792506201,
+          "cod": 4.074746537509188,
+          "mae_currency": 15057.745674935337
+        },
+        "2 ROOM": {
+          "count": 588,
+          "median_absolute_percentage_error": 6.634302628363536,
+          "mean_absolute_percentage_error": 8.408079690279967,
+          "within_10_percent": 0.6564625850340136,
+          "within_20_percent": 0.9370748299319728,
+          "median_prediction_sale_ratio": 0.9998033341304435,
+          "cod": 8.409712416732514,
+          "mae_currency": 30836.85751812066
+        },
+        "3 ROOM": {
+          "count": 4504,
+          "median_absolute_percentage_error": 7.709318138086635,
+          "mean_absolute_percentage_error": 10.383535644276915,
+          "within_10_percent": 0.6119005328596803,
+          "within_20_percent": 0.8643428063943162,
+          "median_prediction_sale_ratio": 1.0249717475854565,
+          "cod": 9.927217939862759,
+          "mae_currency": 45968.46571204543
+        },
+        "4 ROOM": {
+          "count": 8648,
+          "median_absolute_percentage_error": 6.086241424067773,
+          "mean_absolute_percentage_error": 7.462193394203005,
+          "within_10_percent": 0.7240980573543015,
+          "within_20_percent": 0.9577937095282146,
+          "median_prediction_sale_ratio": 1.0275698514078426,
+          "cod": 6.92295241279078,
+          "mae_currency": 50692.54863786859
+        },
+        "5 ROOM": {
+          "count": 4613,
+          "median_absolute_percentage_error": 6.690428315175234,
+          "mean_absolute_percentage_error": 8.115245936567819,
+          "within_10_percent": 0.68567092998049,
+          "within_20_percent": 0.9440711034034251,
+          "median_prediction_sale_ratio": 1.0357992396466587,
+          "cod": 7.261725136073751,
+          "mae_currency": 63766.450375641136
+        },
+        "EXECUTIVE": {
+          "count": 1272,
+          "median_absolute_percentage_error": 5.739312140051061,
+          "mean_absolute_percentage_error": 7.143722681695008,
+          "within_10_percent": 0.7476415094339622,
+          "within_20_percent": 0.9661949685534591,
+          "median_prediction_sale_ratio": 1.0215589236520026,
+          "cod": 6.748318702009757,
+          "mae_currency": 65535.66011188573
+        },
+        "MULTI-GENERATION": {
+          "count": 6,
+          "median_absolute_percentage_error": 7.30562017500363,
+          "mean_absolute_percentage_error": 8.067973277328216,
+          "within_10_percent": 0.8333333333333334,
+          "within_20_percent": 1.0,
+          "median_prediction_sale_ratio": 0.9269437982499638,
+          "cod": 6.371185061008831,
+          "mae_currency": 97057.03007902096
+        }
+      }
+    },
+    "hist_gradient_boosting": {
+      "calibration": {
+        "count": 10778,
+        "median_absolute_percentage_error": 3.8663497346726414,
+        "mean_absolute_percentage_error": 4.825863428864685,
+        "within_10_percent": 0.8927444794952681,
+        "within_20_percent": 0.995360920393394,
+        "median_prediction_sale_ratio": 0.9958081219620836,
+        "cod": 4.833871239100594,
+        "mae_currency": 32974.08738545805
+      },
+      "test": {
+        "count": 19639,
+        "median_absolute_percentage_error": 4.510218078055983,
+        "mean_absolute_percentage_error": 5.656205505424034,
+        "within_10_percent": 0.8398085442232293,
+        "within_20_percent": 0.9871174703396304,
+        "median_prediction_sale_ratio": 1.0025991857937677,
+        "cod": 5.637173586617432,
+        "mae_currency": 38834.97325709658
+      },
+      "unseen_block_test": {
+        "count": 1966,
+        "median_absolute_percentage_error": 4.983626979465294,
+        "mean_absolute_percentage_error": 6.0743340588800026,
+        "within_10_percent": 0.8133265513733469,
+        "within_20_percent": 0.987792472024415,
+        "median_prediction_sale_ratio": 1.0004387029328972,
+        "cod": 6.0716141693869226,
+        "mae_currency": 43297.54995497847
+      },
+      "interval_90_nominal_coverage": 0.8501960384948317,
+      "calibration_log_error_quantile": 0.10325144109467657,
+      "by_type": {
+        "1 ROOM": {
+          "count": 8,
+          "median_absolute_percentage_error": 8.022949580509053,
+          "mean_absolute_percentage_error": 8.400680471446,
+          "within_10_percent": 0.625,
+          "within_20_percent": 1.0,
+          "median_prediction_sale_ratio": 1.0802294958050904,
+          "cod": 3.947288130735089,
+          "mae_currency": 21461.483738467454
+        },
+        "2 ROOM": {
+          "count": 588,
+          "median_absolute_percentage_error": 3.588995757878932,
+          "mean_absolute_percentage_error": 4.915934643100132,
+          "within_10_percent": 0.8809523809523809,
+          "within_20_percent": 0.9846938775510204,
+          "median_prediction_sale_ratio": 0.9897543177360228,
+          "cod": 4.876949009899676,
+          "mae_currency": 18431.780589229846
+        },
+        "3 ROOM": {
+          "count": 4504,
+          "median_absolute_percentage_error": 4.877947783355902,
+          "mean_absolute_percentage_error": 6.074181295220233,
+          "within_10_percent": 0.8141651865008881,
+          "within_20_percent": 0.9842362344582594,
+          "median_prediction_sale_ratio": 0.9995551183624178,
+          "cod": 6.076775475495219,
+          "mae_currency": 28951.30813358604
+        },
+        "4 ROOM": {
+          "count": 8648,
+          "median_absolute_percentage_error": 4.404670424176038,
+          "mean_absolute_percentage_error": 5.363185618103908,
+          "within_10_percent": 0.8604301572617946,
+          "within_20_percent": 0.9935245143385754,
+          "median_prediction_sale_ratio": 1.010253592548763,
+          "cod": 5.242717106167278,
+          "mae_currency": 36793.28517825726
+        },
+        "5 ROOM": {
+          "count": 4613,
+          "median_absolute_percentage_error": 4.516707287181365,
+          "mean_absolute_percentage_error": 5.9269031540789126,
+          "within_10_percent": 0.818339475395621,
+          "within_20_percent": 0.9785389117710818,
+          "median_prediction_sale_ratio": 0.9982794876849536,
+          "cod": 5.935789547363697,
+          "mae_currency": 50593.40643938859
+        },
+        "EXECUTIVE": {
+          "count": 1272,
+          "median_absolute_percentage_error": 4.2197616564000615,
+          "mean_absolute_percentage_error": 5.467578791779458,
+          "within_10_percent": 0.8522012578616353,
+          "within_20_percent": 0.9874213836477987,
+          "median_prediction_sale_ratio": 0.9856694656172983,
+          "cod": 5.396342947368141,
+          "mae_currency": 53923.87953021935
+        },
+        "MULTI-GENERATION": {
+          "count": 6,
+          "median_absolute_percentage_error": 12.80219811134704,
+          "mean_absolute_percentage_error": 14.989775860688399,
+          "within_10_percent": 0.5,
+          "within_20_percent": 0.6666666666666666,
+          "median_prediction_sale_ratio": 0.8719780188865296,
+          "cod": 7.013527520237324,
+          "mae_currency": 184480.03619433753
+        }
+      }
+    }
+  },
+  "warning": "Published transaction prices, not independently screened arms-length market values. Month precision only. This is a benchmark, not a certified appraisal or proof of global accuracy.",
+  "selected_by_calibration": "hist_gradient_boosting"
+}

@@ -1,0 +1,10 @@
+{
+  "coverage_definition": "Supported means source records were acquired, ingested, located and evaluated. An address on a map alone is not valuation coverage.",
+  "markets": [
+    {"id":"SG-HDB","country":"Singapore","status":"official transactions acquired","types":"All HDB residential resale types","source":"https://data.gov.sg/datasets/d_8b84c4ee58e3cfc0ece0d773c8ca6abc/view","limits":"Block/type identities only; private housing and exact unit history not covered; coordinates from a pinned OneMap-derived mirror."},
+    {"id":"FR-DVF","country":"France","status":"attempted; network policy denied download","source":"https://files.data.gouv.fr/geo-dvf/latest/csv/2025/departements/75.csv.gz","limits":"Mutation values may cover multiple parcels/lots; allocation and residential filtering required; incomplete departmental coverage."},
+    {"id":"GB-PPD","country":"England and Wales","status":"attempted; network policy denied download","source":"https://publicdata.landregistry.gov.uk/pp-2025.csv","limits":"Residential price-paid data need area/characteristics and geocoding joins; not all UK jurisdictions."},
+    {"id":"US-NYC","country":"United States · New York City","status":"attempted; network policy denied download","source":"https://www.nyc.gov/site/finance/property/property-rolling-sales-data.page","limits":"Five boroughs only; non-market/zero-price transfers, tax lots, condo units and area reliability need screening."},
+    {"id":"GLOBAL-OSM","country":"Worldwide","status":"geographic discovery only","source":"https://www.openstreetmap.org","limits":"Buildings and addresses provide discovery, not verified transaction prices or ownership."}
+  ]
+}
